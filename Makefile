@@ -10,7 +10,7 @@ endif
 
 LDIR=./packages/bamtools/lib64/
 IDIR2=./htslib/
-LDIR2=./packages/htslib/lib/
+LDIR2=./packages/htslib/htslib/
 IDIR=./packages/bamtools/include/bamtools/
 IDIR3=./packages/bamtools/lib64/
 
