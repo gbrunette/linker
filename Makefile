@@ -8,11 +8,11 @@ else
   CC := c++ -o3 -std=c++11
 endif
 
-LDIR=./packages/bamtools/lib/
+LDIR=./packages/bamtools/lib64/
 IDIR2=./htslib/
 LDIR2=./packages/htslib/lib/
 IDIR=./packages/bamtools/include/bamtools/
-IDIR3=./packages/bamtools/lib/
+IDIR3=./packages/bamtools/lib64/
 
 CFLAGS=-I$(IDIR) -I$(IDIR2)
 LFLAGS=-L$(LDIR) -L$(LDIR2) -Wl,-rpath,$(IDIR2),-rpath,$(IDIR3) #-L$(LDIR3)
