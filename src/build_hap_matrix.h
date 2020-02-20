@@ -3,6 +3,9 @@
 
 //////////////// c++ include //////////////////
 #include <iostream>
+#include <functional>
+#include <math.h>
+#include <numeric>
 #include <string>
 #include <vector>
 #include <unordered_map>
