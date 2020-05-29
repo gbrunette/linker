@@ -43,6 +43,7 @@ extern "C" {
 /////////////// functions /////////////////////
 std::vector<vcf_entry> load_and_filter_vcf_file( std::string input_vcf_file, int chromosome, std::string chr_string, std::string hetfilterFile );
 std::vector<vcf_entry> load_vcf_file( std::string input_vcf_file, int chromosome );
+std::vector<vcf_entry> load_vcf_file_pop( std::string input_vcf_file, std::string chromosome );
 std::vector<vcf_entry> load_vcf_file_coverage( std::string input_vcf_file, int chromosome );
 std::vector<vcf_entry> load_vcf_file_total( std::string input_vcf_file );
 std::map<std::string,int> load_vcf_file_header( std::string input_vcf_file, std::map<std::string,int>& chr_str_map );

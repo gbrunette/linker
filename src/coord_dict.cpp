@@ -31,7 +31,9 @@ void coord_dictionary::initialize( std::unordered_map<std::string,variant_node> 
 	switchE.push_back(0.0); 
 	span_bound.push_back(0);
 	block.push_back(0);
-	within_filter.push_back(false); 
+	pop_hap.push_back(0);
+	within_filter.push_back(false);
+	pos_index[sorted_paired_positions[i]] = i; 
     };
     //for (int i = 0; i < num_total; i++) {
     //    deltaE_total.push_back(0.0);
@@ -69,6 +71,11 @@ void coord_dictionary::get_submatrix_bounds( map_matrix<int> &nmatrix ) {
 void coord_dictionary::hap_random_initialization() {
     for (int i = 0; i < num_paired; i++) { haplotype.push_back((int)(rand()%2)*2-1); }
 }
+
+void coord_dictionary::hap_pop_initialization() {
+    for (int i = 0; i < num_paired; i++) { haplotype.push_back(pop_hap[i]); } 
+}
+
 
 void coord_dictionary::hap_zero_initialization() {
     for (int i = 0; i < num_paired; i++) { 

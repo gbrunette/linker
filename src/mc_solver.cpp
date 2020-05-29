@@ -53,7 +53,157 @@ void solver_recursive( std::unordered_map<std::string,variant_node>& var_dict, c
         }
         //set_switch_energy(pdict,flip_maxima);   /// create a new haplotype block class and find the segments
 };
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dict, coord_dictionary& pdict, map_matrix<int> num_matrix, map_matrix<double> diff_matrix ) {
+        int t = clock();
+	int zeroth_window = 5e5;
+	int first_window = 1e5;
+	int another_window = 5e4;
+	int second_window = 1e4;
+	int windows_xp = 5e3;
+	int third_window = 1e3;
+	int last_window = 500;
+	int ranges = 100;
+	int range0 = 50;
+	int range1 = 25;
+	int range2 = 10;
+	int range3 = 5;
+	int range4 = 2;
+	int prior, prior_prior;
+    static const std::size_t length = pdict.num_paired;
+    cout << "========" << endl;
+    cout << "monte carlo solver: " << endl;
+    for ( int i = 0; i < 20; i++ ) { switchE_recursive_pop(pdict, num_matrix, diff_matrix, 5e5); }
+    //for (int i = 0; i < 20; i++) { switchE_recursive( pdict, num_matrix, diff_matrix ); }
+    for( int i = 0; i < 20; i++ ) { flipE( pdict, num_matrix, 6e5, diff_matrix ); }
+    switchE_recursive_pop(pdict, num_matrix, diff_matrix, 5e5);
+    //range_switch( pdict, num_matrix, diff_matrix, (int)pdict.num_paired/5 );
+	//for( int i = 0; i < 20; i++ ) { flipE( pdict, num_matrix, 6e5, diff_matrix ); }
+     /*
+    }
+    for (int i = 0; i < 3; i++) {
+        calculate_switchE( pdict, num_matrix, diff_matrix );
+        
+        range_switch( pdict, num_matrix, diff_matrix, (int)pdict.num_paired/30 );
+        range_switch( pdict, num_matrix, diff_matrix, (int)pdict.num_paired/20 );
+        range_switch( pdict, num_matrix, diff_matrix, (int)pdict.num_paired/15 );
+        range_switch( pdict, num_matrix, diff_matrix, (int)pdict.num_paired/10 );
+        range_switch( pdict, num_matrix, diff_matrix, (int)pdict.num_paired/5 );
+        range_switch( pdict, num_matrix, diff_matrix, (int)pdict.num_paired/3 );
+        for( int i = 0; i < 10; i++ ) { flipE( pdict, num_matrix, 6e5, diff_matrix ); }
+    }
+   
+    int i = 0;
+    for (int j = (int)pdict.num_paired/5; j < pdict.num_paired; j+=(int)pdict.num_paired/5) {
+        switchE_recursive_range( pdict, num_matrix, diff_matrix, i, j );
+        i = j;
+    }
+    
+    prior = 1e6;
+    for( int i = 0; i < 5; i++ ) { block_flip_recursive_pop( pdict, num_matrix, 5e4, 5e5, prior, diff_matrix ); }
+    prior = 1e6;
+    for( int i = 0; i < 3; i++ ) { block_flip_recursive_pop( pdict, num_matrix, 7.5e4, 5e5, prior, diff_matrix ); }
+    prior = 1e6;
+    for( int i = 0; i < 3; i++ ) { block_flip_recursive_pop( pdict, num_matrix, 1e5, 5e5, prior, diff_matrix ); }
+    prior = 1e6;
+	for( int i = 0; i < 3; i++ ) { block_flip_recursive_pop( pdict, num_matrix, 1.5e5, 5e5, prior, diff_matrix ); }
+    for( int i = 0; i < 10; i++ ) { flipE( pdict, num_matrix, 6e5, diff_matrix ); }
+    calculate_switchE( pdict, num_matrix, diff_matrix );
+    */
+    
+};
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void switchE_recursive_range( coord_dictionary& pdict, map_matrix<int>& nmatrix, map_matrix<double> diff_matrix, int start, int end ) {
+  
+};
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void switchE_recursive_pop( coord_dictionary& pdict, map_matrix<int>& nmatrix, map_matrix<double> diff_matrix, int pop_weight ) {
+        int nbf = 0;
+        int site_diff;
+        int min_pos = 0;
+        vector<int> h_plus;
+        vector<int> h_minus;
+        double initial_energy = 0.0;
+        double factor;
+        for (int i = 0; i < pdict.num_paired; i++) {
+            int h_left = 0;
+            int h_right = 0;
+            for (auto const &ent1 : nmatrix.mat[i]) { 
+                auto const &m = ent1.first;
+                if (pdict.sorted_paired_positions[m] < pdict.sorted_paired_positions[i]) { h_left = h_left + nmatrix(i,m)*pdict.haplotype[m]; }
+                if (pdict.sorted_paired_positions[m] > pdict.sorted_paired_positions[i]) { h_right = h_right + nmatrix(i,m)*pdict.haplotype[m]; }
+                //if (m < i) { h_left = h_left + diff_matrix(i,m)*pdict.haplotype[m]; }
+                //else { h_right = h_right + diff_matrix(i,m)*pdict.haplotype[m]; }
+            }
+            h_minus.push_back(h_left);
+            h_plus.push_back(h_right);
+        }
+        
+        for (int i = 0; i < pdict.num_paired; i++) {
 
+            for (auto const &ent1 : nmatrix.mat[i]) {
+                auto const &m = ent1.first;
+                initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*nmatrix(i,m); 
+                //initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*diff_matrix(i,m);
+            }
+            if (i < pdict.num_paired-1) {
+                site_diff = abs(pdict.sorted_paired_positions[i]-pdict.sorted_paired_positions[i+1]);
+                factor = (double)site_diff/pop_weight;
+                initial_energy += -1.0*exp(-1.0*factor)*pdict.haplotype[i]*pdict.haplotype[i+1]*pdict.pop_hap[i]*pdict.pop_hap[i+1];
+            }
+        }
+
+
+        
+        double final_energy = 0.0;
+        vector<int> switch_haplotype = pdict.haplotype;
+        for (int j = 1; j < pdict.num_paired; j++) { switch_haplotype[j] = pdict.haplotype[j]*(-1); }
+        for (int i = 0; i < pdict.num_paired; i++) {
+            for (auto const &ent1 : nmatrix.mat[i]){
+                auto const &m = ent1.first;
+                final_energy += -1.0*switch_haplotype[i]*switch_haplotype[m]*nmatrix(i,m);
+                //final_energy += -1.0*switch_haplotype[i]*switch_haplotype[m]*diff_matrix(i,m);
+            }
+            if (i < pdict.num_paired-1) {
+                site_diff = abs(pdict.sorted_paired_positions[i]-pdict.sorted_paired_positions[i+1]);
+                factor = (double)site_diff/pop_weight;
+                final_energy += -1.0*exp(-1.0*factor)*switch_haplotype[i]*switch_haplotype[i+1]*pdict.pop_hap[i]*pdict.pop_hap[i+1];
+            }
+        }
+        double diffE_last = final_energy - initial_energy;
+        double min_switch = diffE_last;
+        pdict.switchE[0] = (-1.0)*diffE_last;
+        for (int j = 1; j < pdict.num_paired-1; j++) {
+            int site_diff1 = abs(pdict.sorted_paired_positions[j] - pdict.sorted_paired_positions[j+1]);
+            int site_diff2 = abs(pdict.sorted_paired_positions[j-1] - pdict.sorted_paired_positions[j]);
+            double factor1 = (double)site_diff1/pop_weight;
+            double factor2 = (double)site_diff2/pop_weight;
+            diffE_last = diffE_last + pdict.haplotype[j]*(h_plus[j]-h_minus[j]) + pdict.haplotype[j]*pdict.pop_hap[j]*(exp(-1.0*factor1)*pdict.haplotype[j+1]*pdict.pop_hap[j+1] - exp(-1.0*factor2)*pdict.haplotype[j-1]*pdict.pop_hap[j-1]);
+            //diffE_last = diffE_last + pdict.haplotype[j]*(h_plus[j]-h_minus[j]);
+            //if (j < pdict.num_paired-1) { diffE_last = diffE_last - exp(-1.0*factor)*pdict.haplotype[j+1]*pdict.haplotype[j]*pdict.pop_hap[j+1]*pdict.pop_hap[j]; }
+            if ( diffE_last < min_switch ) { min_switch = diffE_last; min_pos = j; }
+            pdict.switchE[j] = (-1.0)*diffE_last;
+        }
+        for (int i = min_pos+1; i < pdict.num_paired; i++) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); }
+    cout << min_pos << endl;
+};
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void range_switch( coord_dictionary& pdict, map_matrix<int> num_matrix, map_matrix<double> diff_matrix, int window ) {
+    int start = 0;
+    int end = window;
+    while ( end < pdict.num_paired ) { 
+        auto max_it = std::max_element(pdict.switchE.begin()+start, pdict.switchE.begin()+end);
+        int index = std::distance( pdict.switchE.begin()+start, max_it );
+        index = index+start;
+        cout << index << endl;
+        if (pdict.switchE[index] > 0) {
+            for (int i = index+1; i < pdict.num_paired; i++) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); }
+        }
+        calculate_switchE( pdict, num_matrix, diff_matrix);
+        start = end;
+        end += window;
+    }
+};
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void solver_recursive_hic( block_dictionary& bdict, std::vector<int> hic_limit_loop, map_matrix<int> block_matrix ) {
         int t = clock();
@@ -127,7 +277,7 @@ static void block_phasing_quick_flip( block_dictionary& bdict, vector<int>& grap
         		traverse_graph( high_correlation_graph, traverse_list, l, bdict.length_subset );
 			cout << "start " << l << endl;
 			for (int l = 0; l < traverse_list.size(); l++) {
-				cout << traverse_list[l] << " ";			
+				//cout << traverse_list[l] << " ";			
 				covered_list.push_back(traverse_list[l]);
 			}
 			cout << endl;
@@ -135,7 +285,7 @@ static void block_phasing_quick_flip( block_dictionary& bdict, vector<int>& grap
 	}
 
 	for (int l = 0; l < traverse_list.size(); l++) {
-		cout << traverse_list[l] << " "; 
+		//cout << traverse_list[l] << " "; 
 		bdict.subset_haplotype[l] = loop_haplotype[l]*-1;	
 	}
 	cout << endl;
@@ -168,10 +318,7 @@ static void traverse_graph( std::unordered_map<int,std::unordered_map<int,int>> 
                 }
         }  //cout << endl;
         std::sort( traverse_list.begin(),traverse_list.end() );
-}
-
-
-
+};
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 static void length_cutoff_nmatrix( coord_dictionary& pdict, map_matrix<double>& diff_matrix, map_matrix<int>& nmatrix, map_matrix<int>& nmatrix2 ) {
         for (int i = 0; i < pdict.num_paired; i++) {
@@ -182,7 +329,6 @@ static void length_cutoff_nmatrix( coord_dictionary& pdict, map_matrix<double>& 
                 }
         }
 };
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void call_blocks(coord_dictionary& pdict,int switch_cutoff ) {
 	int block_num = 0;
@@ -197,8 +343,7 @@ static void set_switch_energy( coord_dictionary& pdict, vector<bool>& flip_maxim
         for (int i = 0; i < pdict.num_paired; i++) {
                 if (!flip_maxima[i]) { pdict.switchE[i] = -10000.0; }
         }
-}
-
+};
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 static void get_flip_positions( coord_dictionary& pdict, vector<bool>& flip_maxima ) {
         for (int i = 0; i < pdict.num_paired; i++) {
@@ -239,6 +384,7 @@ static void single_spin_flip_recursive( coord_dictionary& pdict, map_matrix<doub
         for (int i = 0; i < pdict.num_paired; i++) {
                 int init_i = pdict.haplotype[i]; //int final_i = -1*pdict.haplotype[i];
                 double initial_energy = 0.0;     //double final_energy = 0.0;
+/*
                 for (auto const &ent1 : nmatrix.mat[i]) {
                         auto const &m = ent1.first;
                         int diff_pos = abs(pdict.sorted_paired_positions[m] - pdict.sorted_paired_positions[i]);
@@ -250,17 +396,369 @@ static void single_spin_flip_recursive( coord_dictionary& pdict, map_matrix<doub
                 //cout << "init e " << initial_energy << " final e " << final_energy << " e diff " << diff_energy << endl;
                 if (diff_energy < 0.0) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); nsf++; }
                 pdict.deltaE[i] = (-1.0)*diff_energy;
+*/
+		if (i > 0 && i < pdict.num_paired) {
+                    int spin_prod = pdict.haplotype[i-1]*pdict.haplotype[i+1];
+                    int pos_prod = pdict.haplotype[i]*pdict.haplotype[i+1];
+                    if (spin_prod == 1 && pos_prod == -1){ pdict.haplotype[i] = pdict.haplotype[i]*(-1); nsf++; }
+                }
         }
 };
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void single_spin_flip_recursive_pop( coord_dictionary& pdict, map_matrix<int>& nmatrix ) {
+        int nsf = 0;
+        for (int i = 0; i < pdict.num_paired; i++) {
+                int init_i = pdict.haplotype[i]; //int final_i = -1*pdict.haplotype[i];
+                double initial_energy = 0.0;     //double final_energy = 0.0;
+                for (auto const &ent1 : nmatrix.mat[i]) {
+                        auto const &m = ent1.first;			
+			initial_energy += -1.0*init_i*pdict.haplotype[m]*nmatrix(i,m);
+                }
+                double final_energy = -1*initial_energy;
+                double diff_energy = final_energy - initial_energy;
+                if (diff_energy < 0.0) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); nsf++; }
+                pdict.deltaE[i] = (-1.0)*diff_energy;
+        }
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void flipE( coord_dictionary& pdict, map_matrix<int>& nmatrix, int pop_weight, map_matrix<double> diff_matrix ) {
+    int nsf = 0;
+    double minE = 0.0;
+    int min_pos = 0;
+    int site_diff;
+    double factor;
+    for (int i = 0; i < pdict.num_paired; i++) {
+            int init_i = pdict.haplotype[i]; //int final_i = -1*pdict.haplotype[i];
+            double initial_energy = 0.0;     //double final_energy = 0.0;
+            
+            for (auto const &ent1 : nmatrix.mat[i]) {
+                auto const &m = ent1.first;
+                initial_energy += -1.0*init_i*pdict.haplotype[m]*diff_matrix(i,m);
+                //if (pdict.sorted_paired_positions[i] > 39000000 && pdict.sorted_paired_positions[i] < 40500000) {
+                    //cout << "HiC_link" << "\t" << pdict.sorted_paired_positions[i] << "\t"<< pdict.sorted_paired_positions[m] << "\t" << abs(pdict.sorted_paired_positions[i]-pdict.sorted_paired_positions[m]) << "\t" << nmatrix(i,m) << "\t" << endl;
+                //}
+            }
+            if (i < pdict.num_paired-1) {
+            	site_diff = abs(pdict.sorted_paired_positions[i]-pdict.sorted_paired_positions[i+1]);
+            	factor = (double)site_diff/pop_weight;
+            	initial_energy += -1.0*exp(-1.0*factor)*init_i*pdict.haplotype[i+1]*pdict.pop_hap[i]*pdict.pop_hap[i+1];
+            }
+            
+            double final_energy = -1*initial_energy;
+            double diff_energy = final_energy - initial_energy;
+            //cout << "init e " << initial_energy << " final e " << final_energy << " e diff " << diff_energy << endl;
+            if (diff_energy < 0.0) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); nsf++; }
+	    
+            //if ( diff_energy < minE ) {minE = diff_energy; min_pos = i;} 
+            pdict.deltaE[i] = (-1.0)*diff_energy;
+    }
+    cout << "spin flips" << "\t" << nsf << endl;
+    //pdict.haplotype[min_pos] = pdict.haplotype[min_pos]*(-1);
+};
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void switchE( coord_dictionary& pdict, map_matrix<int>& nmatrix, map_matrix<double> diff_matrix ) {
+        int nbf = 0;
+        double initial_energy = 0.0;
+        int site_diff;
+        int min_pos = 0;
+        double min_switch = 0;
 
+        for (int i = 0; i < pdict.num_paired; i++) {
+
+            for (auto const &ent1 : nmatrix.mat[i]) {
+                auto const &m = ent1.first;
+                initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*diff_matrix(i,m); 
+            }
+        }
+
+        for ( int i = 0; i < pdict.num_paired; i++ ) {
+		
+            int initial_pos  = pdict.sorted_paired_positions[i];
+            double final_energy = 0.0;
+            vector<int> switch_haplotype = pdict.haplotype;
+            int j = i+1;
+            bool window = true;
+            while(window == true && j < pdict.num_paired) { 
+                switch_haplotype[j] = pdict.haplotype[j]*(-1);
+                j+=1;
+                if(pdict.sorted_paired_positions[j] > initial_pos+1e5) {
+                    window = false;
+                }
+            }
+            for (int k = 0; k < pdict.num_paired; k++) {
+                for (auto const &ent1 : nmatrix.mat[k]){
+                    auto const &m = ent1.first;
+                    final_energy += -1.0*switch_haplotype[k]*switch_haplotype[m]*diff_matrix(k,m);
+                }
+            }
+            double diffE = final_energy - initial_energy;
+            pdict.switchE[i] = (-1.0)*diffE;
+            //if ( diffE < min_switch ) { min_switch = diffE; min_pos = i; }
+	if ( diffE < 0 ) {pdict.haplotype = switch_haplotype; initial_energy = final_energy; nbf++;}
+        }
+	cout << "nbf:" << "\t" << nbf << endl;
+
+        //for (int i = min_pos+1; i < pdict.num_paired; i++) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); }
+};
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void switchE_global( coord_dictionary& pdict, map_matrix<int>& nmatrix ) {
+        int nbf = 0;
+        double initial_energy = 0.0;
+        int site_diff;
+        int min_pos = 0;
+        double min_switch = 0;
+        for (int i = 0; i < pdict.num_paired; i++) {
+
+            for (auto const &ent1 : nmatrix.mat[i]) {
+                auto const &m = ent1.first;
+                initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*nmatrix(i,m); 
+            }
+        }
+
+
+
+        for ( int i = 0; i < pdict.num_paired; i++ ) {
+            double final_energy = 0.0;
+            vector<int> switch_haplotype = pdict.haplotype;
+            for (int j = i+1; j < pdict.num_paired; j++) { switch_haplotype[j] = pdict.haplotype[j]*(-1); }
+            for (int k = 0; k < pdict.num_paired; k++) {
+                for (auto const &ent1 : nmatrix.mat[k]){
+                    auto const &m = ent1.first;
+                    final_energy += -1.0*switch_haplotype[k]*switch_haplotype[m]*nmatrix(k,m);
+                }
+            }
+            double diffE = final_energy - initial_energy;
+            pdict.switchE[i] = (-1.0)*diffE;
+            if ( diffE < min_switch ) { min_switch = diffE; min_pos = i; }
+        }
+
+        for (int i = min_pos+1; i < pdict.num_paired; i++) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); }
+};
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void switchE_local( coord_dictionary& pdict, map_matrix<int>& nmatrix ) {
+        int nbf = 0;
+        double initial_energy = 0.0;
+        int site_diff;
+        int min_pos = 0;
+        double min_switch = 0;
+
+        for (int i = 0; i < pdict.num_paired; i++) {
+
+            for (auto const &ent1 : nmatrix.mat[i]) {
+                auto const &m = ent1.first;
+                initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*nmatrix(i,m); 
+            }
+        }
+
+        for ( int i = 0; i < pdict.num_paired; i++ ) {
+        
+            int initial_pos  = pdict.sorted_paired_positions[i];
+            double final_energy = 0.0;
+            vector<int> switch_haplotype = pdict.haplotype;
+            int j = i+1;
+            bool window = true;
+            while(window == true && j < pdict.num_paired) { 
+                switch_haplotype[j] = pdict.haplotype[j]*(-1);
+                j+=1;
+                if(pdict.sorted_paired_positions[j] > initial_pos+5e5) {
+                    window = false;
+                }
+            }
+            for (int k = 0; k < pdict.num_paired; k++) {
+                for (auto const &ent1 : nmatrix.mat[k]){
+                    auto const &m = ent1.first;
+                    final_energy += -1.0*switch_haplotype[k]*switch_haplotype[m]*nmatrix(k,m);
+                }
+            }
+            double diffE = final_energy - initial_energy;
+            pdict.switchE[i] = (-1.0)*diffE;
+            //if ( diffE < min_switch ) { min_switch = diffE; min_pos = i; }
+    if ( diffE < 0 ) {pdict.haplotype = switch_haplotype; initial_energy = final_energy; nbf++;}
+        }
+    cout << "nbf:" << "\t" << nbf << endl;
+
+        //for (int i = min_pos+1; i < pdict.num_paired; i++) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); }
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void switchE_mini( coord_dictionary& pdict, map_matrix<int>& nmatrix ) {
+        int nbf = 0;
+        double initial_energy = 0.0;
+        int site_diff;
+        int min_pos = 0;
+        double min_switch = 0;
+
+        for (int i = 0; i < pdict.num_paired; i++) {
+
+            for (auto const &ent1 : nmatrix.mat[i]) {
+                auto const &m = ent1.first;
+                initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*nmatrix(i,m); 
+            }
+        }
+
+        for ( int i = 0; i < pdict.num_paired; i++ ) {
+        
+            int initial_pos  = pdict.sorted_paired_positions[i];
+            double final_energy = 0.0;
+            vector<int> switch_haplotype = pdict.haplotype;
+            int j = i+1;
+            bool window = true;
+            while(window == true && j < pdict.num_paired) { 
+                switch_haplotype[j] = pdict.haplotype[j]*(-1);
+                j+=1;
+                if(pdict.sorted_paired_positions[j] > initial_pos+1e5) {
+                    window = false;
+                }
+            }
+            for (int k = 0; k < pdict.num_paired; k++) {
+                for (auto const &ent1 : nmatrix.mat[k]){
+                    auto const &m = ent1.first;
+                    final_energy += -1.0*switch_haplotype[k]*switch_haplotype[m]*nmatrix(k,m);
+                }
+            }
+            double diffE = final_energy - initial_energy;
+            pdict.switchE[i] = (-1.0)*diffE;
+            //if ( diffE < min_switch ) { min_switch = diffE; min_pos = i; }
+    if ( diffE < 0 ) {pdict.haplotype = switch_haplotype; initial_energy = final_energy; nbf++;}
+        }
+    cout << "nbf:" << "\t" << nbf << endl;
+
+        //for (int i = min_pos+1; i < pdict.num_paired; i++) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); }
+};
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void switchE_recursive( coord_dictionary& pdict, map_matrix<int>& nmatrix, map_matrix<double> diff_matrix ) {
+        int nbf = 0;
+        int site_diff;
+        int min_pos = 0;
+        vector<int> h_plus;
+        vector<int> h_minus;
+        double initial_energy = 0.0;
+        for (int i = 0; i < pdict.num_paired; i++) {
+            int h_left = 0;
+            int h_right = 0;
+            for (auto const &ent1 : nmatrix.mat[i]) { 
+                auto const &m = ent1.first;
+                //if (m < i) { h_left = h_left + nmatrix(i,m)*pdict.haplotype[m]; }
+                //else { h_right = h_right + nmatrix(i,m)*pdict.haplotype[m]; }
+                if (m < i) { h_left = h_left + diff_matrix(i,m)*pdict.haplotype[m]; }
+                if (m > i) { h_right = h_right + diff_matrix(i,m)*pdict.haplotype[m]; }
+            }
+            h_minus.push_back(h_left);
+            h_plus.push_back(h_right);
+        }
+        
+        for (int i = 0; i < pdict.num_paired; i++) {
+
+            for (auto const &ent1 : nmatrix.mat[i]) {
+                auto const &m = ent1.first;
+                //initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*nmatrix(i,m); 
+                initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*diff_matrix(i,m);
+            }
+        }
+        double final_energy = 0.0;
+        vector<int> switch_haplotype = pdict.haplotype;
+        for (int j = 1; j < pdict.num_paired; j++) { switch_haplotype[j] = pdict.haplotype[j]*(-1); }
+        for (int i = 0; i < pdict.num_paired; i++) {
+            for (auto const &ent1 : nmatrix.mat[i]){
+                auto const &m = ent1.first;
+                final_energy += -1.0*switch_haplotype[i]*switch_haplotype[m]*diff_matrix(i,m);
+            }
+        }
+        double diffE_last = final_energy - initial_energy;
+        double min_switch = diffE_last;
+        pdict.switchE[0] = (-1.0)*diffE_last;
+        for (int j = 1; j < pdict.num_paired; j++) {
+            diffE_last = diffE_last + pdict.haplotype[j]*(h_plus[j]-h_minus[j]);
+            if ( diffE_last < min_switch ) { min_switch = diffE_last; min_pos = j; }
+            pdict.switchE[j] = (-1.0)*diffE_last;
+        }
+        for (int i = min_pos+1; i < pdict.num_paired; i++) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); }
+		cout << min_pos << endl;
+};
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void calculate_switchE( coord_dictionary& pdict, map_matrix<int>& nmatrix, map_matrix<double> diff_matrix ) {
+        int nbf = 0;
+        int site_diff;
+        int min_pos = 0;
+        vector<int> h_plus;
+        vector<int> h_minus;
+        double initial_energy = 0.0;
+        
+        for (int i = 0; i < pdict.num_paired; i++) {
+            int h_left = 0;
+            int h_right = 0;
+            for (auto const &ent1 : nmatrix.mat[i]) { 
+                auto const &m = ent1.first;
+                if (pdict.sorted_paired_positions[m] < pdict.sorted_paired_positions[i]) { h_left = h_left + diff_matrix(i,m)*pdict.haplotype[m]; }
+                if (pdict.sorted_paired_positions[m] > pdict.sorted_paired_positions[i]) { h_right = h_right + diff_matrix(i,m)*pdict.haplotype[m]; }
+            }
+            h_minus.push_back(h_left);
+            h_plus.push_back(h_right);
+        }
+        
+        for (int i = 0; i < pdict.num_paired; i++) {
+
+            for (auto const &ent1 : nmatrix.mat[i]) {
+                auto const &m = ent1.first;
+                initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*diff_matrix(i,m); 
+            }
+        }
+
+
+        
+        double final_energy = 0.0;
+        vector<int> switch_haplotype = pdict.haplotype;
+        for (int j = 1; j < pdict.num_paired; j++) { switch_haplotype[j] = pdict.haplotype[j]*(-1); }
+        for (int i = 0; i < pdict.num_paired; i++) {
+            for (auto const &ent1 : nmatrix.mat[i]){
+                auto const &m = ent1.first;
+                final_energy += -1.0*switch_haplotype[i]*switch_haplotype[m]*diff_matrix(i,m);
+            }
+        }
+        double diffE_last = final_energy - initial_energy;
+        double min_switch = diffE_last;
+        pdict.switchE[0] = (-1.0)*diffE_last;
+        
+        for (int j = 1; j < pdict.num_paired; j++) {
+            diffE_last = (-1.0)*pdict.switchE[j-1] + pdict.haplotype[j]*(h_plus[j]-h_minus[j]);
+            if (diffE_last < min_switch) { min_switch = diffE_last; min_pos = j; }
+            pdict.switchE[j] = (-1.0)*diffE_last;
+        }
+        //for (int i = min_pos+1; i < pdict.num_paired; i++) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); }
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void switchE_recursive_window( coord_dictionary& pdict, map_matrix<int>& nmatrix ) {
+    int nbf = 0;
+    //calculate_switchE(pdict, nmatrix);
+    for ( int i = 0; i < pdict.num_paired; i++ ) {
+            int initial_pos  = pdict.sorted_paired_positions[i];
+            vector<int> switch_haplotype = pdict.haplotype;
+            int j = i+1;
+            bool window = true;
+            while(window == true && j < pdict.num_paired) { 
+                switch_haplotype[j] = pdict.haplotype[j]*(-1);
+                j+=1;
+                if(pdict.sorted_paired_positions[j] > initial_pos+1e5) {
+                    window = false;
+                }
+            }
+
+            double windowE = (-1.0)*(pdict.switchE[i] - pdict.switchE[j]);
+            //if( windowE < 0.0 ) {pdict.haplotype = switch_haplotype; calculate_switchE(pdict, nmatrix); nbf++; cout << nbf << endl;}
+    }
+    cout << "window switches: " << nbf << endl;
+};       
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 static void block_flip_recursive( coord_dictionary& pdict, map_matrix<double>& diff_matrix, map_matrix<int>& nmatrix ) {
         int nbf = 0;
+	int site_diff;
         double initial_energy = 0.0;
         for (int i = 0; i < pdict.num_paired; i++) {
                 for (auto const &ent1 : nmatrix.mat[i]) {
                         auto const &m = ent1.first;
-                        initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*diff_matrix(i,m);
+			site_diff = abs(pdict.sorted_paired_positions[i]-pdict.sorted_paired_positions[m]);
+			
+            		if (site_diff < 1e6) { initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*nmatrix(i,m); }
+                        //initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*diff_matrix(i,m);
                 }
         }
         double energyA = initial_energy;
@@ -276,19 +774,41 @@ static void block_flip_recursive( coord_dictionary& pdict, map_matrix<double>& d
                 double spin_f_energy = 0.0;
                 for (auto const &ent1 : nmatrix.mat[i]) {
                         auto const &m = ent1.first;
-                        spin_i_energy += -1.0*hap_spin*switch_haplotype[m]*diff_matrix(i,m);  /// may need to add negative sign
-                        spin_f_energy += -1.0*flip_spin*switch_haplotype[m]*diff_matrix(i,m);
+			site_diff = abs(pdict.sorted_paired_positions[i]-pdict.sorted_paired_positions[m]);
+			
+			if (site_diff < 1e6) { 
+				cout << "position: " << pdict.sorted_paired_positions[i] << endl;
+				cout << "site diff: " << site_diff << endl;
+                        	spin_i_energy += -1.0*hap_spin*switch_haplotype[m]*diff_matrix(i,m);  /// may need to add negative sign
+                        	spin_f_energy += -1.0*flip_spin*switch_haplotype[m]*diff_matrix(i,m);
+			}
+
                 }
                 double switch_energy = spin_f_energy - spin_i_energy;
                 energyA = energyA + switch_energy;
                 double diff_energy = energyA - energyB;
-                if ( diff_energy < 0.0 ) {
+				
+				int v1 = rand() % 100 + 1;
+				int flipped = 0;
+				cout << "Rand is: " << "\t" << v1 << endl;
+                if ( diff_energy < 0.0 && v1 > 30) {
+						cout << "Take the switch" << endl;
                         loop_haplotype = switch_haplotype;
                         energyB = energyA;
                         energyA = save_energyB;
                         nbf++;
+						flipped++;
                 }
-                else {
+				
+				if ( diff_energy > 0.0 && v1 < 10 ) {
+						loop_haplotype = switch_haplotype;
+                        energyB = energyA;
+                        energyA = save_energyB;
+                        nbf++; 
+						flipped++;
+				}
+				
+                if ( flipped == 0 ) {	
                         energyB = save_energyB;
                         energyA = energyA;
                 }
@@ -296,8 +816,168 @@ static void block_flip_recursive( coord_dictionary& pdict, map_matrix<double>& d
         }
         pdict.haplotype = loop_haplotype;
 };
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<int>& nmatrix, int& range, int& prior ) {
+        int nbf = 0;
+        double initial_energy = 0.0;
+        int site_diff;
+        double factor;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+        
+        for (int i = 0; i < pdict.num_paired; i++) {
+
+            for (auto const &ent1 : nmatrix.mat[i]) {
+            	auto const &m = ent1.first;
+            	initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*nmatrix(i,m);     
+            }
+            if (i < pdict.num_paired-1) {
+            	site_diff = abs(pdict.sorted_paired_positions[i]-pdict.sorted_paired_positions[i+1]);
+            	factor = (double)site_diff/4e5;
+            	initial_energy += -1.0*exp(-1.0*factor)*pdict.haplotype[i]*pdict.haplotype[i+1]*pdict.pop_hap[i]*pdict.pop_hap[i+1];
+            }
+
+        }
+
+        double energyA = initial_energy;
+        double energyB = initial_energy;
+        vector<int> loop_haplotype = pdict.haplotype;
+
+        for (int i = 0; i < pdict.num_paired; i++) {
+            vector<int> switched;
+            double save_energyB = energyB;
+            vector<int> switch_haplotype = loop_haplotype;
+            int var_count =0;
+            int j = i+1;
+            bool window = true;
+            while(window == true && j < pdict.num_paired) { 
+                switch_haplotype[j] = pdict.haplotype[j]*(-1);
+                switched.push_back(j);
+                if ( pdict.pop_hap[j] != 0 ) { var_count+=1; }
+                j+=1;
+                if(var_count > range) {
+                    window = false;
+                }
+            }
+
+            
+            int hap_spin  = loop_haplotype[i];    
+            int flip_spin = -1*loop_haplotype[i];
+            double spin_i_energy = 0.0;
+            double spin_f_energy = 0.0; 
+            for (int k = 0; k < switched.size(); k++) {
+                for (auto const &ent1 : nmatrix.mat[switched[k]]) {
+                    auto const &m = ent1.first;
+                    spin_f_energy += -1.0*switch_haplotype[switched[k]]*switch_haplotype[m]*nmatrix(switched[k],m); 
+                    spin_i_energy += -1.0*pdict.haplotype[switched[k]]*pdict.haplotype[m]*nmatrix(switched[k],m); 
+				}
+
+				if (switched[k] < pdict.num_paired-1) {
+					site_diff = abs(pdict.sorted_paired_positions[switched[k]]-pdict.sorted_paired_positions[switched[k]+1]);
+					factor = (double)site_diff/4e5;
+					spin_f_energy += -1.0*exp(-1.0*factor)*switch_haplotype[switched[k]]*switch_haplotype[switched[k]+1]*pdict.pop_hap[switched[k]]*pdict.pop_hap[switched[k]+1];
+					spin_i_energy += -1.0*exp(-1.0*factor)*pdict.haplotype[switched[k]]*pdict.haplotype[switched[k]+1]*pdict.pop_hap[switched[k]]*pdict.pop_hap[switched[k]+1];
+				}
+            }
+            
+            double switch_energy = spin_f_energy - spin_i_energy;
+            if ( switch_energy < 0.0) {
+                loop_haplotype = switch_haplotype;
+                //energyB = energyA;
+                //energyA = save_energyB;
+                nbf++;
+                pdict.switchE[i] = (-1.0)*switch_energy;
+                i = j;
+            }
+            //pdict.switchE[i] = (-1.0)*switch_energy;
+        }
+        cout << "number block flips: " << "\t" << nbf << endl;
+        if ( nbf < prior ) { pdict.haplotype = loop_haplotype; prior = nbf; }
+};
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void block_flip_recursive_pop( coord_dictionary& pdict, map_matrix<int>& nmatrix, int dist, int pop_weight, int& prior, map_matrix<double> diff_matrix ) {
+        int nbf = 0;
+        double initial_energy = 0.0;
+        int site_diff;
+        double factor;
+        int last_pos;
+        
+        for (int i = 0; i < pdict.num_paired; i++) {
+            for (auto const &ent1 : nmatrix.mat[i]) {
+            	auto const &m = ent1.first;
+            	initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*diff_matrix(i,m);     
+            }
+            if (i < pdict.num_paired-1) {
+            	site_diff = abs(pdict.sorted_paired_positions[i]-pdict.sorted_paired_positions[i+1]);
+            	factor = (double)site_diff/pop_weight;
+            	initial_energy += -1.0*exp(-1.0*factor)*pdict.haplotype[i]*pdict.haplotype[i+1]*pdict.pop_hap[i]*pdict.pop_hap[i+1];
+            }
+
+        }
+
+        double energyA = initial_energy;
+        double energyB = initial_energy;
+        vector<int> loop_haplotype = pdict.haplotype;
+
+        for (int i = 0; i < pdict.num_paired; i++) {
+            vector<int> switched;
+            double save_energyB = energyB;
+            vector<int> switch_haplotype = loop_haplotype;
+            int initial_pos = pdict.sorted_paired_positions[i];
+            int j = i+1;
+            bool window = true;
+            while(window == true && j < pdict.num_paired) { 
+                switch_haplotype[j] = pdict.haplotype[j]*(-1);
+                switched.push_back(j);
+                j+=1;
+                if(pdict.sorted_paired_positions[j] > initial_pos+dist) {
+                    window = false;
+                }
+            }
+            
+            int hap_spin  = loop_haplotype[i];    
+            int flip_spin = -1*loop_haplotype[i];
+            double spin_i_energy = 0.0;
+            double spin_f_energy = 0.0; 
+            for (int k = 0; k < switched.size(); k++) {
+                for (auto const &ent1 : nmatrix.mat[switched[k]]) {
+                    auto const &m = ent1.first;
+                    spin_f_energy += -1.0*switch_haplotype[switched[k]]*switch_haplotype[m]*diff_matrix(switched[k],m); 
+                    spin_i_energy += -1.0*pdict.haplotype[switched[k]]*pdict.haplotype[m]*diff_matrix(switched[k],m); 
+				}
+
+				if (switched[k] < pdict.num_paired-1) {
+					site_diff = abs(pdict.sorted_paired_positions[switched[k]]-pdict.sorted_paired_positions[switched[k]+1]);
+					factor = (double)site_diff/pop_weight;
+					spin_f_energy += -1.0*exp(-1.0*factor)*switch_haplotype[switched[k]]*switch_haplotype[switched[k]+1]*pdict.pop_hap[switched[k]]*pdict.pop_hap[switched[k]+1];
+					spin_i_energy += -1.0*exp(-1.0*factor)*pdict.haplotype[switched[k]]*pdict.haplotype[switched[k]+1]*pdict.pop_hap[switched[k]]*pdict.pop_hap[switched[k]+1];
+				}
+            }
+            
+            double switch_energy = spin_f_energy - spin_i_energy;
+            //double switch_energy = spin_i_energy - spin_f_energy;
+            //energyA += switch_energy;
+            //double diff_energy = energyA - energyB;
+            
+            if ( switch_energy < 0.0) {
+                loop_haplotype = switch_haplotype;
+                //energyB = energyA;
+                //energyA = save_energyB;
+                nbf++;
+                pdict.switchE[i] = (-1.0)*switch_energy;
+                i = j;
+            }
+            /*
+            else {
+                energyB = save_energyB;
+                energyA = energyA;
+            }
+            */
+            //pdict.switchE[i] = (-1.0)*switch_energy;
+        }
+        cout << "number block flips: " << "\t" << nbf << endl;
+        if ( nbf < prior ) { pdict.haplotype = loop_haplotype; prior = nbf; }
+};
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 static void energy_sum_min_max_hic( block_dictionary& bdict ) {
         double sum = 0.0; double max = 0.0; double min = 0.0;
         for (int i = 0; i < bdict.length_subset; i++) {
@@ -307,7 +987,6 @@ static void energy_sum_min_max_hic( block_dictionary& bdict ) {
         }
         cout << "-- energy sum: " << sum << " minimum: " << min << " maximum: " << max << endl;
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 static void single_spin_flip_recursive_hic( block_dictionary& bdict ) {
         int nsf = 0;

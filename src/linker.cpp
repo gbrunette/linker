@@ -4,7 +4,7 @@
 static const char *LINKER_USAGE_MESSAGE =
 "############### running linker ############### \n"
 "Program: Linker \n"
-"Version: 0.42 \n"
+"Version: 0.44 \n"
 "Usage: linker <command> [options]\n\n"
 "Commands:\n"
 "\textract\t\textract links \n"
@@ -16,6 +16,7 @@ static const char *LINKER_USAGE_MESSAGE =
 "\tcn_phase\tfurther phase genome due to LOH or aneuplody in genome \n"
 "\tsv_phase\tphase sv call on long reads \n"
 "\tfilter\t\tfilter normal variants by copy fraction \n"
+"\tpop\t\tphase whole chromosome with population and hic data \n"
 "\n";
 //"	phase		(extract + solve) phase germline haplotype from linked read sample \n"
 //"	hic_phase	phase split reads in hic \n"
@@ -44,6 +45,8 @@ int main(int argc, char** argv) {
 	run_bin_matrix(argc-1, argv+1);
     } else if (command == "sv_phase") { 
 	run_sv_phaser(argc-1, argv+1); 	
+    } else if (command == "pop") { 
+	run_pop_phaser(argc-1, argv+1); 	
     } else if (command == "filter") {
         run_variant_filtering(argc-1, argv+1);
     //} else if (command == "hic_phase") {

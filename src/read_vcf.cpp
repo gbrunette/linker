@@ -17,6 +17,7 @@ std::vector<vcf_entry> load_and_filter_vcf_file( std::string input_vcf_file, int
         std::vector<vcf_entry> entry;    //kstring_t filter;
         int rec_position,rec_id,len_ref;
         int i = 0;
+	//strcmp(x->key, "contig") == 0)
         htsFile * inf = bcf_open(input_vcf_file.c_str(), "r");
         bcf_hdr_t *hdr = bcf_hdr_read(inf);
         bcf_srs_t *sr = bcf_sr_init();
@@ -101,6 +102,55 @@ std::vector<vcf_entry> load_vcf_file( std::string input_vcf_file, int chromosome
         }
       	return entry;
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+std::vector<vcf_entry> load_vcf_file_pop( std::string input_vcf_file, std::string chromosome ) {
+        std::string ref_base,var_base;
+        std::vector<vcf_entry> entry;
+        std::list<std::string> allowed_base_list = { "A","T","C","G"};
+        int rec_position,rec_id,len_ref;
+	int ngt_arr = 0; int ngt     = 0; int *gt     = NULL; // genotype data for each call
+        htsFile * inf = bcf_open(input_vcf_file.c_str(), "r");
+	/////////////////////////////////////////////
+	//bcf_hdr_t *test_header = bcf_hdr_read(inf);
+	/////////////////////////////////////////////
+        bcf_hdr_t *hdr = bcf_hdr_read(inf);
+        bcf_srs_t *sr = bcf_sr_init();
+        bcf_sr_add_reader(sr,input_vcf_file.c_str());
+        bcf1_t *line;
+	std::string chr_name;
+        int i = 0;
+        while(bcf_sr_next_line(sr)) {
+                line = bcf_sr_get_line(sr,0);
+		chr_name = bcf_hdr_id2name(hdr, line->rid); 
+                if (chr_name == chromosome) {
+                        //if ((DEBUG == 1) && (i > het_cutoff)) { break; }
+                        ref_base = line->d.allele[0];
+                        var_base = line->d.allele[1];
+                        bool ref_found = ( std::find( allowed_base_list.begin(), allowed_base_list.end(), ref_base) != allowed_base_list.end() );
+                        bool var_found = ( std::find( allowed_base_list.begin(), allowed_base_list.end(), var_base) != allowed_base_list.end() );
+                        //cout << ref_base << " " << var_base << " " << ref_found << " " << var_found << endl;
+                        if ( ref_found && var_found ) {
+                        rec_position = line->pos;
+                        rec_id = line->rid;
+                        len_ref = line->rlen;
+			ngt = bcf_get_format_int32(hdr, line, "GT", &gt, &ngt_arr);
+			int genotype = bcf_gt_allele(gt[0]);    int genotype_s = bcf_gt_allele(gt[1]);
+			int phap = 1;
+			if (genotype == 0) { phap = -1; }
+			//cout << rec_position << " " << ref_base << " " << var_base << " " << rec_id << " " << genotype << " " << genotype_s << " " << phap << endl;
+                        entry.push_back(vcf_entry());
+                        entry[i].pos = rec_position;    entry[i].chromosome_id = rec_id;
+                        entry[i].ref_base = ref_base;   entry[i].var_base = var_base;
+			entry[i].pop_hap = phap;
+                        entry[i].bounded = true;
+                        i += 1;
+                        }
+                }
+        }
+        return entry;
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 std::vector<vcf_entry> load_vcf_file_coverage( std::string input_vcf_file, int chromosome ) {
@@ -216,6 +266,18 @@ void subset_het_sites( vcf_vector& vvec, int start_bound, int end_bound ) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+        //while(bcf_read(inf, test_header, test_record) == 0) {
+        //    std::cout << bcf_hdr_id2name(test_header, test_record->rid) << "\t" <<
+        //                 test_record->pos << "\t" <<
+        //                 test_record->n_allele << "\t" <<
+        //                 std::endl;
+        //}
+
 
 
 

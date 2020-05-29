@@ -217,6 +217,19 @@ void write_hap_solution( std::unordered_map<std::string,variant_node>& var_dict,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void write_pop_hap_solution( std::unordered_map<std::string,variant_node>& var_dict, std::string hapsolutionFile, coord_dictionary& pdict, std::string chr_choice ) {
+        ofstream ofile; ofile.open(hapsolutionFile);
+        std::unordered_map<int,int> opposite; opposite[0] = 1; opposite[1] = 0;
+        for (int i = 0; i < pdict.num_paired; i++) {
+                int p = pdict.sorted_paired_positions[i];
+                int m = pdict.ref_index[p];
+                ofile << i << "\t" << p << "\t" << chr_choice << "_" << pdict.ref_handle[i] << "\t" << chr_choice << "_" << pdict.alt_handle[i] << "\t" << pdict.haplotype[i] << "\t" << pdict.pop_hap[i] << "\t" << pdict.deltaE[i] << "\t" << pdict.switchE[i] << endl;
+                //ofile << i << "\t" << p << "\t" << pdict.haplotype[i] << "\t" << pdict.deltaE[i] << "\t" << pdict.switchE[i] << endl;
+        }
+        ofile.close();
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 void write_bin_matrix( std::unordered_map<int,gen_bin>& bx_map, std::string outputFile, std::string contig_name, int binsize ) {
         ofstream ofile; ofile.open(outputFile);
         for (auto& it : bx_map) {

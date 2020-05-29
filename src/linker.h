@@ -48,6 +48,7 @@ extern "C" {
 #include "run_hic_phaser.h"
 #include "run_scaffold.h"
 #include "run_recover.h"
+#include "run_pop_hic_phase.h"
 
 //#include "run_bx_bin.h"
 /////////////// definitions ///////////////////
@@ -60,7 +61,7 @@ extern "C" {
 //#define minimum_baseq 8                 // read base quality greater than {val}
 
 ///////////// solver_cutoffs //////
-//#define solver_loops 10                 // {val} the number of spin flip block flip loops
+//#define solver_loops 300                 // {val} the number of spin flip block flip loops
 //#define switch_cut 150                        // -{val} is the minimum switchE required to flip block
 //#define pos_diff_cutoff 100000          // {val} if the maximum delta genome distance - band width
 

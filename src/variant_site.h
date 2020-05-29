@@ -13,6 +13,7 @@ using namespace std;
 struct vcf_entry {
     bool bounded;
     int pos,chromosome_id;
+    int pop_hap;
     std::string ref_base,var_base;
 };
 

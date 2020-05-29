@@ -51,10 +51,11 @@ void prune_graph( std::unordered_map<std::string,variant_node>& var_dict ) {
                 if (found) { it.second.paired = true; }
                 else { it.second.paired = false; }
         }
+	//for (auto& it : var_dict) { it.second.paired = true; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void calculate_epso( int i, int j, map_matrix_vector& expanded, map_matrix<int>& nmatrix, map_matrix<int>& span_matrix, map_matrix<double>& corr_matrix, map_matrix<double>& diff_matrix, int &ecount, double &esum ) {
+void calculate_link_fractions( int i, int j, map_matrix_vector& expanded, map_matrix<int>& nmatrix, map_matrix<int>& span_matrix, map_matrix<double>& corr_matrix, map_matrix<double>& diff_matrix ) {
         int vv=0,rv=0,total=0,span=0;
         double diff = 0.0,frac=0.0,corr=0.0;
         for (int m = 0; m < nmatrix(i,j); m++) {
@@ -63,70 +64,25 @@ void calculate_epso( int i, int j, map_matrix_vector& expanded, map_matrix<int>&
         }
         //if (i == j) { cout << " within the loop " << total << "  " << vv << "  " << rv << endl; }
         if (total > 0 ) {
-                if (vv > rv) { span = rv; }
-                if (rv >= vv) { span = vv; }
+                if (vv > rv) { span = vv; }
+                if (rv >= vv) { span = rv; }
                 diff = (double)(vv-rv)*abs(vv-rv)/(vv+rv);
-                corr = (double)span/total;
-				/*
-                diff_matrix.set_val(i,j,corr);
-                corr_matrix.set_val(i,j,corr);
-                span_matrix.set_val(i,j,span);
-				*/
-				esum+=corr;
-				ecount++;
-        };
-		
-};
-
-void calculate_link_fractions( int i, int j, map_matrix_vector& expanded, map_matrix<int>& nmatrix, map_matrix<int>& span_matrix, map_matrix<double>& corr_matrix, map_matrix<double>& diff_matrix, double epso ) {
-        int vv=0,rv=0,total=0,span=0;
-        double diff = 0.0,frac=0.0,corr=0.0,eps=0.0;
-        for (int m = 0; m < nmatrix(i,j); m++) {
-                total++;
-                if (expanded.return_val(i,j,m)) { vv++; } else { rv++; }
-        }
-        //if (i == j) { cout << " within the loop " << total << "  " << vv << "  " << rv << endl; }
-        if (total > 0 ) {
-                if (vv > rv) { span = rv; }
-                if (rv >= vv) { span = vv; }
-                eps = (double)span/total;
-				if (epso > eps) { eps = epso; }
-				//if (eps < 0 ) {cout << "eps under zero!" << endl; }
-				corr = log((1-eps)/eps)*(vv-rv);
-
-                diff_matrix.set_val(i,j,corr);
+                corr = (double)(vv-rv)/total;
+                diff_matrix.set_val(i,j,diff);
                 corr_matrix.set_val(i,j,corr);
                 span_matrix.set_val(i,j,span);
         };
-		
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void link_matrix_calculations( map_matrix_vector& expanded, map_matrix<int>& nmatrix, map_matrix<int>& span_matrix, map_matrix<double>& corr_matrix, map_matrix<double>& diff_matrix ) {
-	int ecount=0;
-	double esum=0.0;
         for(auto const &ent1 : nmatrix.mat) {
                 auto const &i = ent1.first;
                 auto const &inner_map = ent1.second;
                 for(auto const &ent2 : ent1.second) {
                         auto const &j = ent2.first;
                         auto const &inner_value = ent2.second;   //cout << i << "  " << j << endl;
-						calculate_epso(i,j,expanded,nmatrix,span_matrix,corr_matrix,diff_matrix,ecount,esum);
-                }
-        }
-		
-		double epso = esum/ecount;
-		cout << "epso is: " << epso << endl;
-		cout << "ecount is: " << ecount << endl;
-		cout << log((1-epso)/epso)  << endl;
-		
-		for(auto const &ent1 : nmatrix.mat) {
-                auto const &i = ent1.first;
-                auto const &inner_map = ent1.second;
-                for(auto const &ent2 : ent1.second) {
-                        auto const &j = ent2.first;
-                        auto const &inner_value = ent2.second;   //cout << i << "  " << j << endl;
-                        calculate_link_fractions(i,j,expanded,nmatrix,span_matrix,corr_matrix,diff_matrix,epso);
+                        calculate_link_fractions(i,j,expanded,nmatrix,span_matrix,corr_matrix,diff_matrix);
                 }
         }
 };
@@ -181,6 +137,7 @@ void initialize_solver( std::unordered_map<std::string,variant_node>& var_dict, 
         cout << "paired positions size: " << pdict.sorted_paired_positions.size() << endl;
         cout << "size of num matrix: " << diff_matrix.mat.size() << endl;
         pdict.hap_random_initialization();
+	//pdict.hap_pop_initialization();
         //for (auto ii = num_matrix.mat.begin(); ii !=  num_matrix.mat.end(); ii++ ) {
         //for (auto ii = diff_matrix.mat.begin(); ii !=  diff_matrix.mat.end(); ii++ ) {
         //        cout << (*ii).first << "  ";

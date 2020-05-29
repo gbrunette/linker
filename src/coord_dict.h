@@ -21,6 +21,7 @@ public:
     vector<int> block,block_total;
     vector<int> span_bound,span_bound_total;
     vector<int> haplotype;
+    vector<int> pop_hap;
     vector<std::string> ref_handle,alt_handle;
     vector<bool> reload_bool;
     vector<bool> within_filter,within_filter_total;
@@ -29,11 +30,13 @@ public:
     vector<int> flip_up_bound,flip_low_bound;
     std::unordered_map<int,std::vector<std::string> > paired_dict;
     std::unordered_map<int,int> ref_index;
+    std::unordered_map<int,int> pos_index;
     std::unordered_map<int,std::vector<int> > base_number;
     int num_paired,num_total;
     void initialize( std::unordered_map<std::string,variant_node>& , bool paired );
     void get_submatrix_bounds( map_matrix<int>& );
     void hap_random_initialization();
+    void hap_pop_initialization();
     void hap_zero_initialization();
 };
 
